@@ -11,6 +11,6 @@ struct Rect {
 	int h;
 
 	bool intersect(const Rect&) const;
-}
+};
 
 #endif
