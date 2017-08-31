@@ -4,6 +4,7 @@
 #include "Rect.h"
 #include <memory>
 #include <vector>
+#include <utility>
 
 template <class T>
 class Quadtree {
@@ -15,7 +16,14 @@ public:
 
 	void insert(const T&);
 
-	
+	//represents a collision stored in the tree
+	typedef std::pair<T*, T*> collision;
+
+	std::vector<collision> getCollisions() {
+		std::vector<collision> collision;
+		getCollisionsHelper(collision);
+		return collision;
+	}
 
 private:
 	static constexpr int NODE_CAPACITY = 4;
@@ -41,6 +49,9 @@ private:
 	void split();
 
 	bool hasSplit();
+
+	//helper method to collect the collisions in the tree
+	void getCollisionsHelper(std::vector<collision>&);
 };
 
 template <class T>
@@ -109,4 +120,26 @@ bool Quadtree<T>::hasSplit() {
 	return NW;
 }
 
+template <class T>
+void Quadtree<T>::getCollisionsHelper(std::vector<Quadtree<T>::collision>& bucket) {
+
+	//if the node has split then collect in each subtree
+	if (hasSplit()) {
+		NW->getCollisionsHelper(bucket);
+		SW->getCollisionsHelper(bucket);
+		NE->getCollisionsHelper(bucket);
+		SE->getCollisionsHelper(bucket);
+	} else {
+		typedef typename std::vector<const T>::size_type size_vc;
+		for (size_vc i = 0 ; i < node_data.size() ; i++) {
+			for (size_vc j = i + 1 ; j < node_data.size() ; j++) {
+				if (node_data[i]->collides(*node_data[j])) {
+					collision p = {node_data[i], node_data[j]};
+					bucket.push_back(p);
+				}
+			}
+		}
+		
+	}
+}
 #endif
